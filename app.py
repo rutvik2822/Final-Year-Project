@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import joblib
 from preprocess import preprocess_data  # Import the preprocessing function
+import os
+os.system("pip install --upgrade tensorflow==2.10.0")
 
 app = Flask(__name__)
 
