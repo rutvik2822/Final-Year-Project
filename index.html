@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Behavioral CAPTCHA</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        h2 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            border: 2px solid #333;
+            border-radius: 10px;
+            cursor: crosshair;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        button:active {
+            background-color: #222;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Behavioral CAPTCHA - Draw to Verify</h2>
+    <canvas id="captchaCanvas" width="400" height="300"></canvas>
+    <div class="button-container">
+        <button onclick="clearCanvas()">Clear Canvas</button>
+        <button onclick="sendDrawing()">Verify</button>
+    </div>
+    <p id="result">Prediction: </p>
+
+    <script>
+        let canvas = document.getElementById("captchaCanvas");
+        let ctx = canvas.getContext("2d");
+        let drawingData = [];
+        let isDrawing = false;
+
+        canvas.addEventListener("mousedown", (e) => {
+            isDrawing = true;
+            drawingData = [];
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            if (!isDrawing) return;
+            let x = e.offsetX;
+            let y = e.offsetY;
+            let timestamp = Date.now() / 1000;
+            drawingData.push([x, y, timestamp]);
+            ctx.fillRect(x, y, 2, 2);
+        });
+
+        canvas.addEventListener("mouseup", () => { isDrawing = false; });
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawingData = [];
+            document.getElementById("result").innerText = "Prediction: ";
+        }
+
+        async function sendDrawing() {
+            if (drawingData.length === 0) {
+                alert("Please draw something first!");
+                return;
+            }
+
+            console.log("Sending Data:", drawingData); // Debugging line
+
+            let response = await fetch("http://127.0.0.1:5000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ drawing_data: drawingData }) // Ensure correct JSON format
+            });
+
+            let result = await response.json();
+            console.log("Server Response:", result); // Debugging line
+            document.getElementById("result").innerText = "Prediction: " + result.prediction;
+        }
+    </script>
+</body>
+</html>
