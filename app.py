@@ -2,9 +2,6 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import joblib
 from preprocess import preprocess_data  # Import the preprocessing function
-import os
-os.system("pip install --no-cache-dir --force-reinstall tensorflow-cpu==2.10.0")
-
 
 app = Flask(__name__)
 
@@ -35,7 +32,9 @@ def predict():
     return jsonify({"prediction": "Human" if prediction == 0 else "Bot"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=5000)
+
+
 
 
 
