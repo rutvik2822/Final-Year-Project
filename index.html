@@ -29,6 +29,7 @@
             cursor: crosshair;
             background: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            touch-action: none; /* Prevent scrolling on touch devices */
         }
         #result {
             margin-top: 20px;
@@ -64,7 +65,7 @@
     <canvas id="captchaCanvas" width="400" height="300"></canvas>
     <div class="button-container">
         <button onclick="clearCanvas()">Clear Canvas</button>
-        <button onclick="sendDrawing()">Verify</button>
+        <button onclick="predictDrawing()">Verify</button>
     </div>
     <p id="result">Prediction: </p>
 
@@ -73,22 +74,43 @@
         let ctx = canvas.getContext("2d");
         let drawingData = [];
         let isDrawing = false;
+        let lastTime = 0;
+        const MAX_POINTS = 100; // Limit points sent to backend
 
-        canvas.addEventListener("mousedown", (e) => {
+        function getCoords(event) {
+            return event.touches 
+                ? [event.touches[0].clientX - canvas.offsetLeft, event.touches[0].clientY - canvas.offsetTop]
+                : [event.offsetX, event.offsetY];
+        }
+
+        function startDrawing(event) {
             isDrawing = true;
             drawingData = [];
-        });
+            lastTime = Date.now();
+        }
 
-        canvas.addEventListener("mousemove", (e) => {
+        function draw(event) {
             if (!isDrawing) return;
-            let x = e.offsetX;
-            let y = e.offsetY;
-            let timestamp = Date.now() / 1000;
-            drawingData.push([x, y, timestamp]);
-            ctx.fillRect(x, y, 2, 2);
-        });
+            let [x, y] = getCoords(event);
+            let now = Date.now();
+            if (now - lastTime > 50) { // Capture data every 50ms
+                drawingData.push([x, y, now / 1000]); // Normalize timestamp
+                ctx.fillRect(x, y, 2, 2);
+                lastTime = now;
+            }
+        }
 
-        canvas.addEventListener("mouseup", () => { isDrawing = false; });
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseleave", stopDrawing);
+        canvas.addEventListener("touchstart", startDrawing);
+        canvas.addEventListener("touchmove", draw);
+        canvas.addEventListener("touchend", stopDrawing);
 
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -96,28 +118,24 @@
             document.getElementById("result").innerText = "Prediction: ";
         }
 
-        async function sendDrawing() {
-            if (drawingData.length === 0) {
-                alert("Please draw something before verifying!");
-                return;
-            }
-
+        async function predictDrawing() {
             try {
+                const trimmedData = drawingData.slice(-MAX_POINTS); // Keep only last 100 points
                 const response = await fetch("https://final-year-project-1-nsdp.onrender.com/predict", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ drawing_data: drawingData })
+                    body: JSON.stringify({ drawing_data: trimmedData })
                 });
 
                 const data = await response.json();
                 console.log("Prediction:", data.prediction);
-
-                document.getElementById("result").innerText = "Prediction: " + data.prediction;
+                document.getElementById("result").innerText = `Prediction: ${data.prediction}`;
             } catch (error) {
-                console.error("Error sending request:", error);
-                document.getElementById("result").innerText = "Error: Unable to verify";
+                console.error("Error:", error);
+                document.getElementById("result").innerText = "Error in Prediction";
             }
         }
     </script>
 </body>
 </html>
+
