@@ -5,7 +5,7 @@ from preprocess import preprocess_data
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  
+CORS(app)
 
 # Load trained model
 model = joblib.load("captcha_model.pkl")
