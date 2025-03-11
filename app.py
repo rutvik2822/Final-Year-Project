@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import joblib
 from preprocess import preprocess_data  # Import the preprocessing function
+from flask_cors import CORS
+CORS(app)
 
 app = Flask(__name__)
 
@@ -31,14 +33,9 @@ def predict():
 
     return jsonify({"prediction": "Human" if prediction == 0 else "Bot"})
 
-@app.route('/')
-def home():
-    return "Flask is running!"
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Ensure correct port
-    app.run(host='0.0.0.0', port=port)
-
+     app.run(debug=True)
 
 
 
