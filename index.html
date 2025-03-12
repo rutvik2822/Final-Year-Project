@@ -118,17 +118,23 @@
             document.getElementById("result").innerText = "Prediction: ";
         }
 
-        async function predictDrawing(drawingData) {
-    try {
-        console.log("Prediction: Bot"); // Debugging: Log "Bot"
-        
-        // Force the display to show "Bot" regardless of API response
-        document.getElementById("result").innerText = "Prediction: Bot";
-    } catch (error) {
-        console.error("Error:", error);
-        document.getElementById("result").innerText = "Error in Prediction";
-    }
-}
+        async function predictDrawing() {
+            try {
+                const trimmedData = drawingData.slice(-MAX_POINTS); // Keep only last 100 points
+                const response = await fetch("https://final-year-project-1-nsdp.onrender.com/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ drawing_data: trimmedData })
+                });
+
+                const data = await response.json();
+                console.log("Prediction:", data.prediction);
+                document.getElementById("result").innerText = `Prediction: ${data.prediction}`;
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("result").innerText = "Error in Prediction";
+            }
+        }
     </script>
 </body>
 </html>
