@@ -6,6 +6,10 @@ def preprocess_data(drawing_data):
     :param drawing_data: List of tuples [(x, y, timestamp), ...]
     :return: Dictionary of extracted features
     """
+    if len(drawing_data) < 2:
+        # If only one point is drawn, return zero values
+        return {"average_speed": 0, "speed_variance": 0, "num_pauses": 0, "total_time": 0}
+
     speeds = []
     pauses = []
     timestamps = [point[2] for point in drawing_data]
@@ -13,16 +17,18 @@ def preprocess_data(drawing_data):
     for i in range(1, len(drawing_data)):
         x1, y1, t1 = drawing_data[i - 1]
         x2, y2, t2 = drawing_data[i]
+
+        # Ensure time difference is not too small to avoid division by near-zero
+        time_diff = max(t2 - t1, 0.01)  # Minimum threshold to avoid extreme values
         
         # Calculate speed
         distance = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
-        time_diff = t2 - t1
-        if time_diff > 0:
-            speed = distance / time_diff
-            speeds.append(speed)
-        
-        # Calculate pauses (time differences > threshold)
-        if time_diff > 0.5:  # Example threshold: 0.5 seconds
+        speed = distance / time_diff
+        speeds.append(speed)
+
+        # Calculate pauses dynamically
+        avg_time_diff = (timestamps[-1] - timestamps[0]) / len(drawing_data)
+        if time_diff > avg_time_diff * 2:  # Pause is detected if gap is twice the average interval
             pauses.append(time_diff)
     
     # Calculate average and variance of speed
@@ -52,3 +58,4 @@ if __name__ == "__main__":
     
     features = preprocess_data(sample_data)
     print("Extracted Features:", features)
+
