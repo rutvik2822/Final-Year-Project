@@ -35,8 +35,6 @@ def preprocess_data(drawing_data):
         speed = min(speed, max_speed_threshold)  # Cap max speed
         speeds.append(speed)
 
-        print(f"🔹 Point {i}: ({x1},{y1}) -> ({x2},{y2}) | Time: {t1} -> {t2} | Distance: {distance:.3f} | Speed: {speed:.3f}")
-
         # Calculate pauses (if time difference is too large)
         avg_time_diff = (timestamps[-1] - timestamps[0]) / len(drawing_data)
         if time_diff > avg_time_diff * 2:
