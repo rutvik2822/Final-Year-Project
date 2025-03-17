@@ -47,7 +47,13 @@ def predict():
     except Exception as e:
         print(f"❌ Error in processing: {e}")
         return jsonify({"error": "Prediction failed"}), 500
-
+        
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
 if __name__ == '__main__':
     app.run(debug=True)
 
