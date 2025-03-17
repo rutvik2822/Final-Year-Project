@@ -2,8 +2,8 @@ import numpy as np
 
 def preprocess_data(drawing_data):
     """
-    Preprocess drawing data to extract meaningful features for ML analysis.
-    :param drawing_data: List of tuples [(x, y, timestamp), ...]
+    Preprocess drawing data to extract meaningful features.
+    :param drawing_data: List of (x, y, timestamp)
     :return: Dictionary of extracted features
     """
     if len(drawing_data) < 2:
@@ -13,6 +13,10 @@ def preprocess_data(drawing_data):
     pauses = []
     timestamps = [point[2] for point in drawing_data]
     
+    # Define thresholds
+    min_distance_threshold = 2  # Ignore distances smaller than 2 px
+    max_speed_threshold = 10  # Max reasonable speed (adjustable)
+
     for i in range(1, len(drawing_data)):
         x1, y1, t1 = drawing_data[i - 1]
         x2, y2, t2 = drawing_data[i]
@@ -24,12 +28,16 @@ def preprocess_data(drawing_data):
 
         # Calculate speed
         distance = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
+        if distance < min_distance_threshold:
+            continue  # Ignore micro-movements
+
         speed = distance / time_diff
+        speed = min(speed, max_speed_threshold)  # Cap max speed
         speeds.append(speed)
 
         print(f"🔹 Point {i}: ({x1},{y1}) -> ({x2},{y2}) | Time: {t1} -> {t2} | Distance: {distance:.3f} | Speed: {speed:.3f}")
 
-        # Calculate pauses
+        # Calculate pauses (if time difference is too large)
         avg_time_diff = (timestamps[-1] - timestamps[0]) / len(drawing_data)
         if time_diff > avg_time_diff * 2:
             pauses.append(time_diff)
@@ -47,16 +55,4 @@ def preprocess_data(drawing_data):
     
     print(f"🔹 Final Features: {features}")
     return features
-
-# Test with actual user input
-sample_data = [
-    (100, 200, 0.1),
-    (102, 202, 0.2),
-    (105, 208, 0.4),
-    (110, 220, 1.0),
-    (120, 240, 1.6)
-]
-
-features = preprocess_data(sample_data)
-print("Extracted Features:", features)
 
