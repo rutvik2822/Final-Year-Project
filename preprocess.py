@@ -14,7 +14,7 @@ def preprocess_data(drawing_data):
     timestamps = [point[2] for point in drawing_data]
     
     # Define thresholds
-    min_distance_threshold = 2  # Ignore distances smaller than 2 px
+    min_distance_threshold = 1  # Ignore distances smaller than 2 px
     max_speed_threshold = 10  # Max reasonable speed (adjustable)
 
     for i in range(1, len(drawing_data)):
