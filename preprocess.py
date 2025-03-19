@@ -11,46 +11,46 @@ def preprocess_data(drawing_data):
 
     speeds = []
     pauses = []
-    timestamps = [point[2] for point in drawing_data]
-
-    # Dynamic speed capping (based on percentiles)
-    MAX_SPEED_THRESHOLD = 500  # Adjusted max speed based on observed data
+    timestamps = [point[2] / 1000 for point in drawing_data]  # ✅ Convert ms → seconds
+    
+    # Define thresholds
+    min_distance_threshold = 2  # Ignore very small movements
+    max_speed_threshold = 1000  # Prevent unrealistic values
 
     for i in range(1, len(drawing_data)):
         x1, y1, t1 = drawing_data[i - 1]
         x2, y2, t2 = drawing_data[i]
 
-        # Ensure valid time difference
-        time_diff = t2 - t1
+        time_diff = (t2 / 1000) - (t1 / 1000)  # ✅ Convert timestamps to seconds
         if time_diff <= 0:
-            continue  # Ignore incorrect timestamps
+            continue
 
         # Calculate speed
         distance = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
-        speed = distance / time_diff
+        if distance < min_distance_threshold:
+            continue  
 
-        # Cap speed to remove extreme values
-        speed = min(speed, MAX_SPEED_THRESHOLD)  
+        speed = distance / time_diff
+        speed = min(speed, max_speed_threshold)  
         speeds.append(speed)
 
-        # Calculate pauses: If a time jump is **greater than 3 times** the avg time diff, it's a pause
+        # Detect pauses (large time gaps)
         avg_time_diff = (timestamps[-1] - timestamps[0]) / len(drawing_data)
-        if time_diff > avg_time_diff * 3:
+        if time_diff > avg_time_diff * 2:
             pauses.append(time_diff)
-
-    # Compute final features
+    
     avg_speed = np.mean(speeds) if speeds else 0
     speed_variance = np.var(speeds) if speeds else 0
-    speed_variance = np.log1p(speed_variance)  # Log transformation
+    num_pauses = len(pauses)
+    total_time = timestamps[-1] - timestamps[0] if timestamps else 0
 
     features = {
         "average_speed": avg_speed,
-        "speed_variance": speed_variance,
-        "num_pauses": len(pauses),
-        "total_time": timestamps[-1] - timestamps[0] if timestamps else 0
+        "speed_variance": np.log1p(speed_variance),  # Log transform
+        "num_pauses": num_pauses,
+        "total_time": total_time
     }
-
-    print(f"🔹 Extracted Features: {features}")
+    
+    print(f"🔹 Fixed Features: {features}")  # ✅ Debugging
     return features
-
 
