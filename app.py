@@ -32,7 +32,7 @@ def predict():
     try:
         # Preprocess user input
         features = preprocess_data(data["drawing_data"])
-
+        print(f"🔹 Extracted Features: {features}") 
         # Ensure correct feature names
         feature_names = ["average_speed", "speed_variance", "num_pauses", "total_time"]
         input_df = pd.DataFrame([features], columns=feature_names)

@@ -12,10 +12,9 @@ def preprocess_data(drawing_data):
     speeds = []
     pauses = []
     timestamps = [point[2] for point in drawing_data]
-    
-    # Define thresholds
-    min_distance_threshold = 1  # Ignore distances smaller than 2 px
-    max_speed_threshold = 10  # Max reasonable speed (adjustable)
+
+    # Dynamic speed capping (based on percentiles)
+    MAX_SPEED_THRESHOLD = 500  # Adjusted max speed based on observed data
 
     for i in range(1, len(drawing_data)):
         x1, y1, t1 = drawing_data[i - 1]
@@ -28,29 +27,30 @@ def preprocess_data(drawing_data):
 
         # Calculate speed
         distance = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
-        if distance < min_distance_threshold:
-            continue  # Ignore micro-movements
-
         speed = distance / time_diff
-        speed = min(speed, max_speed_threshold)  # Cap max speed
+
+        # Cap speed to remove extreme values
+        speed = min(speed, MAX_SPEED_THRESHOLD)  
         speeds.append(speed)
 
-        # Calculate pauses (if time difference is too large)
+        # Calculate pauses: If a time jump is **greater than 3 times** the avg time diff, it's a pause
         avg_time_diff = (timestamps[-1] - timestamps[0]) / len(drawing_data)
-        if time_diff > avg_time_diff * 2:
+        if time_diff > avg_time_diff * 3:
             pauses.append(time_diff)
-    
-    # Calculate features
+
+    # Compute final features
     avg_speed = np.mean(speeds) if speeds else 0
     speed_variance = np.var(speeds) if speeds else 0
-    
+    speed_variance = np.log1p(speed_variance)  # Log transformation
+
     features = {
         "average_speed": avg_speed,
         "speed_variance": speed_variance,
         "num_pauses": len(pauses),
         "total_time": timestamps[-1] - timestamps[0] if timestamps else 0
     }
-    
-    print(f"🔹 Final Features: {features}")
+
+    print(f"🔹 Extracted Features: {features}")
     return features
+
 
