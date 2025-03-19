@@ -13,9 +13,9 @@ def preprocess_data(drawing_data):
     pauses = []
     timestamps = [point[2] / 1000 for point in drawing_data]  # ✅ Convert ms → seconds
     
-    # Define thresholds
-    min_distance_threshold = 2  # Ignore very small movements
-    max_speed_threshold = 1000  # Prevent unrealistic values
+    # **Adjust Movement Filters**
+    min_distance_threshold = 0.5  # ✅ Allow smaller real movements
+    max_speed_threshold = 500  # ✅ Reduce max reasonable speed
 
     for i in range(1, len(drawing_data)):
         x1, y1, t1 = drawing_data[i - 1]
@@ -25,8 +25,8 @@ def preprocess_data(drawing_data):
         if time_diff <= 0:
             continue
 
-        # Calculate speed
-        distance = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
+        # ✅ Fix Distance Calculation
+        distance = np.hypot(x2 - x1, y2 - y1)  
         if distance < min_distance_threshold:
             continue  
 
@@ -34,7 +34,7 @@ def preprocess_data(drawing_data):
         speed = min(speed, max_speed_threshold)  
         speeds.append(speed)
 
-        # Detect pauses (large time gaps)
+        # ✅ Fix Pause Calculation
         avg_time_diff = (timestamps[-1] - timestamps[0]) / len(drawing_data)
         if time_diff > avg_time_diff * 2:
             pauses.append(time_diff)
@@ -46,11 +46,10 @@ def preprocess_data(drawing_data):
 
     features = {
         "average_speed": avg_speed,
-        "speed_variance": np.log1p(speed_variance),  # Log transform
+        "speed_variance": np.log1p(speed_variance),  
         "num_pauses": num_pauses,
         "total_time": total_time
     }
     
     print(f"🔹 Fixed Features: {features}")  # ✅ Debugging
     return features
-
