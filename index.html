@@ -81,6 +81,7 @@
     <div class="button-container">
         <button onclick="clearCanvas()">Clear Canvas</button>
         <button onclick="predictDrawing()">Verify</button>
+        <button onclick="simulateBotDrawing()">Simulate Bot</button>
     </div>
     <p id="result" aria-live="polite">Prediction: </p>
     <p id="loading">Loading...</p> <!-- Loading indicator -->
@@ -122,6 +123,47 @@
             drawingData = [];
             document.getElementById("result").innerText = "Prediction: ";
         }
+        function simulateBotDrawing() {
+    clearCanvas(); // Clear previous drawing
+
+    const botData = [];
+    const startX = 50;
+    const startY = 50;
+    const size = 100;
+    const delay = 50; // Milliseconds between steps
+    let time = Date.now();
+
+    const steps = [
+        [startX, startY],
+        [startX + size, startY],
+        [startX + size, startY + size],
+        [startX, startY + size],
+        [startX, startY]
+    ];
+
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+
+    let i = 1;
+    function drawStep() {
+        if (i >= steps.length) {
+            ctx.stroke();
+            drawingData = botData;
+            return;
+        }
+        const [x, y] = steps[i];
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        time += delay;
+        botData.push([x, y, time]);
+        i++;
+        setTimeout(drawStep, delay);
+    }
+
+    // Initialize first point
+    botData.push([startX, startY, time]);
+    drawStep();
+}
 
         async function predictDrawing() {
     try {
