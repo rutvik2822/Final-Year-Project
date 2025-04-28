@@ -191,8 +191,15 @@ async function predictDrawing() {
         const data = await response.json();
         console.log("Prediction Response:", data);
 
-        document.getElementById("result").innerText =
-            `Prediction: ${data.prediction}`;
+        const resultElement = document.getElementById("result");
+resultElement.innerText = `Prediction: ${data.prediction}`;
+
+if (data.prediction === "Bot") {
+    resultElement.style.color = "red";   //  Bot -> Red color
+} else {
+    resultElement.style.color = "green"; // Human -> Green color
+}
+
     } catch (error) {
         console.error("Error:", error);
         document.getElementById("result").innerText = "Error in Prediction";
